@@ -4,7 +4,7 @@ A robust, native Home Assistant integration for **HyperHDR** (the open-source am
 
 Unlike other integrations that act as simple switches, this component creates a fully featured **Light Entity** that manages **Priorities** intelligently. It allows you to seamlessly switch between your TV Input (USB Grabber) and Home Assistant colors/effects without conflicts, while providing **detailed entity attributes** (server version, active priority, ports) for full monitoring.
 
-<img src="custom_components/hyperhdr_integration/logo.png" width="150" alt="HyperHDR Logo">
+<img src="hyperhdr_integration/logo.png" width="150" alt="HyperHDR Logo">
 
 ## ✨ Features
 
@@ -21,7 +21,7 @@ Unlike other integrations that act as simple switches, this component creates a 
 ## ⚙️ Installation
 
 1.  Download the latest release or clone this repository.
-2.  Copy the `custom_components/hyperhdr_integration` folder into your Home Assistant's `config/custom_components/` directory.
+2.  Copy the `hyperhdr_integration` folder into your Home Assistant's `config/custom_components/` directory.
 3.  Restart Home Assistant.
 
 ## 🚀 Configuration
