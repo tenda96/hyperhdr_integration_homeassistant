@@ -1,11 +1,10 @@
 # HyperHDR Integration for Home Assistant
 
-
 A robust, native Home Assistant integration for **HyperHDR** (the open-source ambient lighting software). 
 
-Unlike other integrations that act as simple switches, this component creates a fully featured **Light Entity** that manages **Priorities** intelligently. It allows you to seamlessly switch between your TV Input (USB Grabber) and Home Assistant colors/effects without conflicts.
+Unlike other integrations that act as simple switches, this component creates a fully featured **Light Entity** that manages **Priorities** intelligently. It allows you to seamlessly switch between your TV Input (USB Grabber) and Home Assistant colors/effects without conflicts, while providing **detailed entity attributes** (server version, active priority, ports) for full monitoring.
 
-<img src="hyperhdr_integration/logo.png" width="150" alt="HyperHDR Logo">
+<img src="custom_components/hyperhdr_integration/logo.png" width="150" alt="HyperHDR Logo">
 
 ## ✨ Features
 
@@ -15,9 +14,9 @@ Unlike other integrations that act as simple switches, this component creates a 
     * **Automatic Fallback:** Turning off the light in HA immediately clears the priority, instantly returning control to the USB Grabber.
 * **Full RGB Support:** Includes brightness and color control via the standard HA UI.
 * **Effect Support:** Automatically fetches the list of effects from your HyperHDR instance.
+* **Rich Entity Attributes:** Exposes useful info like Server Version, Active Priority ID, and Connection Status directly in the entity.
 * **Config Flow:** Setup entirely via the UI (no YAML required).
 * **Authentication:** Supports HyperHDR API Tokens for secure connections.
-* **Live Status:** Reports real-time connection status and active priority in the entity attributes.
 
 ## ⚙️ Installation
 
@@ -62,6 +61,13 @@ Check the logs in Home Assistant. If you see "Token non valido" or "HyperHDR Aut
 
 **Icons/Logo not showing:**
 Clear your browser cache (CTRL+F5) or restart the Home Assistant app.
+
+## ❤️ Credits & Disclaimer
+
+This is a **personal project** created because I couldn't find an existing integration that offered full Light control with proper Priority Management.
+
+I am **not affiliated** with the official HyperHDR project in any way.
+A huge thank you to the **HyperHDR team** for their incredible work on the software itself—it's an amazing piece of engineering that makes this integration possible!
 
 ## 📜 License
 MIT License
