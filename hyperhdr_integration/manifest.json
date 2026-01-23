@@ -1,0 +1,11 @@
+{
+  "domain": "hyperhdr_integration",
+  "name": "HyperHDR Integration",
+  "version": "1.0.0",
+  "documentation": "https://github.com/hyperhdr/HyperHDR",
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": [],
+  "config_flow": true, 
+  "iot_class": "local_polling"
+}
