@@ -1,4 +1,4 @@
-"""Piattaforma Light per gestire HyperHDR con Fix Luminosità e Attributi."""
+"""Piattaforma Light per gestire HyperHDR tramite Priorità (Always On)."""
 import logging
 import aiohttp
 import async_timeout
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     )])
 
 class HyperHDRLight(LightEntity):
-    """Rappresentazione di HyperHDR come luce RGB Avanzata."""
+    """Rappresentazione di HyperHDR come Overlay (Sempre Connesso)."""
 
     def __init__(self, host, port, name, token, entry_id):
         self._host = host
@@ -52,7 +52,7 @@ class HyperHDRLight(LightEntity):
         self._effect = None
         self._effect_list = []
         
-        # Attributi extra per il debug/info
+        # Attributi extra
         self._active_component_prio = None
         self._server_version = "Unknown"
         
@@ -68,10 +68,13 @@ class HyperHDRLight(LightEntity):
 
     @property
     def icon(self):
-        return "mdi:led-strip-variant" if self._is_on else "mdi:television"
+        # Icona diversa se stiamo comandando noi o se è in video mode
+        return "mdi:led-strip-variant" if self._is_on else "mdi:television-ambient-light"
 
     @property
     def is_on(self):
+        # Per HA, la luce è "ON" solo se stiamo forzando un colore/effetto (Priority 50).
+        # Se siamo in Video Mode (Priority 240), per HA risulta "OFF" (così puoi riaccenderla).
         return self._is_on
 
     @property
@@ -108,136 +111,13 @@ class HyperHDRLight(LightEntity):
 
     @property
     def extra_state_attributes(self):
-        """Restituisce informazioni aggiuntive sull'entità."""
         return {
             "hyperhdr_host": self._host,
             "hyperhdr_port": self._port,
             "server_version": self._server_version,
             "active_priority": self._active_component_prio,
-            "ha_priority_slot": HA_PRIORITY,
             "connection_status": "Connected" if self._available else "Disconnected",
+            "mode": "Home Assistant Override" if self._is_on else "Video Grabber / Idle"
         }
 
-    async def _send_command(self, payload):
-        """Invia comando API."""
-        headers = {}
-        if self._token:
-            headers["Authorization"] = f"token {self._token}"
-            
-        try:
-            async with aiohttp.ClientSession() as session:
-                with async_timeout.timeout(5):
-                    async with session.post(self._base_url, json=payload, headers=headers) as response:
-                        if response.status == 200:
-                            return await response.json()
-                        elif response.status == 401:
-                            _LOGGER.warning("Token HyperHDR non valido")
-                            self._available = False
-        except Exception:
-            self._available = False
-        return None
-
-    async def async_update(self):
-        """Aggiorna lo stato."""
-        payload = {"command": "serverinfo"}
-        data = await self._send_command(payload)
-        
-        if data and "info" in data:
-            self._available = True
-            info = data["info"]
-            
-            # Info server
-            self._server_version = info.get("hyperhdr", {}).get("version", "Unknown")
-
-            # Lista effetti
-            if not self._effect_list:
-                raw_effects = info.get("effects", [])
-                self._effect_list = sorted([fx["name"] for fx in raw_effects])
-
-            # Analisi Priorità
-            priorities = info.get("priorities", [])
-            
-            ha_is_controlling = False
-            active_prio_val = "Idle"
-
-            # Cerchiamo chi sta comandando (la priorità visibile più bassa)
-            visible_priority = None
-            for prio in priorities:
-                if prio.get("visible", False):
-                    visible_priority = prio
-                    break
-            
-            if visible_priority:
-                active_prio_val = visible_priority.get("priority")
-                
-                # Se la priorità attiva è la nostra (50)
-                if active_prio_val == HA_PRIORITY:
-                    ha_is_controlling = True
-                    # FIX LUMINOSITÀ: NON aggiorniamo _rgb_color o _brightness dal server
-                    # perché il server contiene il valore già dimmerato.
-                    # Ci fidiamo dello stato interno di HA.
-                    
-                    # Aggiorniamo solo l'effetto se presente
-                    if visible_priority.get("componentId") == "EFFECT":
-                        self._effect = visible_priority.get("owner")
-                    else:
-                        self._effect = None
-                
-            self._active_component_prio = active_prio_val
-            self._is_on = ha_is_controlling
-
-        else:
-            self._available = False
-
-    async def async_turn_on(self, **kwargs):
-        """Accende la luce."""
-        
-        # Gestione Effetti
-        if ATTR_EFFECT in kwargs:
-            effect_name = kwargs[ATTR_EFFECT]
-            await self._send_command({
-                "command": "effect",
-                "effect": {"name": effect_name},
-                "priority": HA_PRIORITY,
-                "origin": "Home Assistant"
-            })
-            self._effect = effect_name
-            self._is_on = True
-            return
-
-        # Gestione Colore / Luminosità
-        # Se l'utente cambia solo la luminosità, usiamo il colore che avevamo in memoria
-        rgb = kwargs.get(ATTR_RGB_COLOR, self._rgb_color)
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
-        
-        # Salviamo lo stato "puro" (non dimmerato) in HA
-        self._rgb_color = rgb
-        self._brightness = brightness
-
-        # Calcoliamo il colore da mandare a HyperHDR (Dimmerato)
-        if brightness == 0:
-             # Caso limite, spegniamo la priorità
-             await self.async_turn_off()
-             return
-
-        scale = brightness / 255.0
-        final_rgb = [int(c * scale) for c in rgb]
-
-        await self._send_command({
-            "command": "color",
-            "color": final_rgb,
-            "priority": HA_PRIORITY,
-            "origin": "Home Assistant"
-        })
-        
-        self._effect = None
-        self._is_on = True
-
-    async def async_turn_off(self, **kwargs):
-        """Spegne la luce (Pulisce Priorità 50)."""
-        await self._send_command({
-            "command": "clear",
-            "priority": HA_PRIORITY
-        })
-        self._is_on = False
-        self._effect = None
+    async def
