@@ -1,5 +1,7 @@
 # HyperHDR Integration for Home Assistant
 
+[![version](https://img.shields.io/github/manifest-json/v/tenda96/hyperhdr_integration_homeassistant?filename=hyperhdr_integration%2Fmanifest.json)](https://github.com/tenda96/hyperhdr_integration_homeassistant)
+
 A robust, native Home Assistant integration for **HyperHDR** (the open-source ambient lighting software). 
 
 Unlike other integrations that act as simple switches, this component creates a fully featured **Light Entity** that manages **Priorities** intelligently. It allows you to seamlessly switch between your TV Input (USB Grabber) and Home Assistant colors/effects without conflicts, while providing **detailed entity attributes** (server version, active priority, ports) for full monitoring.
