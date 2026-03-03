@@ -1,11 +1,13 @@
 {
   "domain": "hyperhdr_integration",
   "name": "HyperHDR Integration",
-  "version": "1.0.0",
-  "documentation": "https://github.com/hyperhdr/HyperHDR",
+  "version": "2.0.0",
+  "documentation": "https://github.com/tenda96/hyperhdr_integration_homeassistant",
   "dependencies": [],
-  "codeowners": [],
+  "codeowners": [
+    "@tenda96"
+  ],
   "requirements": [],
-  "config_flow": true, 
+  "config_flow": true,
   "iot_class": "local_polling"
 }
