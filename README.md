@@ -64,6 +64,15 @@ Check the logs in Home Assistant. If you see "Token non valido" or "HyperHDR Aut
 **Icons/Logo not showing:**
 Clear your browser cache (CTRL+F5) or restart the Home Assistant app.
 
+## 📝 Changelog
+
+* **v2.0.0:** * **Ultimate Anti-Flash Fix:** Rewrote the rendering logic using a pipeline-flush technique. Transitions between Solid Colors and Effects are now 100% smooth, eliminating the blinding 100% brightness flashes.
+  * **Unified Brightness:** The Home Assistant brightness slider is now perfectly synced with HyperHDR's global `luminanceGain` across all modes (Grabber, Solid Color, and Effects).
+  * **Code Refactoring:** Cleaned up logic and translated all internal code comments to English.
+* **v1.0.1:** * Addressed an issue where changing brightness would kill the active effect.
+  * Fixed a syntax error that prevented the integration from loading for new installations.
+* **v1.0.0:** * Initial release. Transformed the basic switch integration into a fully-featured Light Entity with Priority Management and Effect fetching.
+
 ## ❤️ Credits & Disclaimer
 
 This is a **personal project** created because I couldn't find an existing integration that offered full Light control with proper Priority Management.
