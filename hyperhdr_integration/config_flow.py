@@ -1,4 +1,4 @@
-"""Config flow per HyperHDR Simple."""
+"""Config flow for HyperHDR Simple."""
 import logging
 import aiohttp
 import async_timeout
@@ -13,7 +13,7 @@ from .const import DOMAIN, DEFAULT_PORT, DEFAULT_NAME
 _LOGGER = logging.getLogger(__name__)
 
 def get_schema(defaults=None):
-    """Genera lo schema del form con eventuali valori predefiniti."""
+    """Generate the form schema with optional default values."""
     defaults = defaults or {}
     return vol.Schema({
         vol.Required(CONF_HOST, default=defaults.get(CONF_HOST, "")): str,
@@ -23,7 +23,7 @@ def get_schema(defaults=None):
     })
 
 async def validate_input(hass, data):
-    """Verifica la connessione."""
+    """Verify the connection settings."""
     host = data[CONF_HOST]
     port = data[CONF_PORT]
     token = data.get(CONF_TOKEN)
@@ -38,11 +38,11 @@ async def validate_input(hass, data):
             with async_timeout.timeout(5):
                 payload = {"command": "serverinfo"}
                 async with session.post(url, json=payload, headers=headers) as response:
-                    # Accettiamo 200 (OK), 401/403 (Auth error ma connesso)
+                    # We accept 200 (OK), 401/403 (Auth error but connected)
                     if response.status not in (200, 401, 403):
-                        raise Exception("Errore HTTP")
+                        raise Exception("HTTP Error")
                     
-                    # Verifica token se 200
+                    # Verify token if status is 200
                     if response.status == 200:
                         resp_json = await response.json()
                         if not resp_json.get("success", True):
@@ -54,16 +54,17 @@ async def validate_input(hass, data):
         raise ValueError("cannot_connect")
 
 class HyperHDRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Gestisce l'installazione iniziale."""
+    """Handle the initial setup flow."""
     VERSION = 1
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        """Attiva il flusso di opzioni."""
+        """Activate the options flow."""
         return HyperHDROptionsFlow(config_entry)
 
     async def async_step_user(self, user_input=None):
+        """Handle the user step."""
         errors = {}
         if user_input is not None:
             try:
@@ -77,19 +78,20 @@ class HyperHDRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=get_schema(), errors=errors)
 
 class HyperHDROptionsFlow(config_entries.OptionsFlow):
-    """Gestisce la modifica dei parametri."""
+    """Handle the modification of parameters."""
 
     def __init__(self, config_entry):
-        # FIX: Non usiamo self.config_entry perché è protetto. Usiamo self._config_entry
+        """Initialize options flow."""
+        # FIX: We use self._config_entry as self.config_entry is protected
         self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        """Gestisce il form di modifica."""
+        """Handle the initialization step."""
         errors = {}
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-                # Aggiorna i dati
+                # Update the entry data
                 self.hass.config_entries.async_update_entry(
                     self._config_entry, data=user_input
                 )
@@ -97,7 +99,7 @@ class HyperHDROptionsFlow(config_entries.OptionsFlow):
             except ValueError as err:
                 errors["base"] = str(err)
 
-        # Pre-popola il form con i dati attuali
+        # Pre-populate the form with current data
         return self.async_show_form(
             step_id="init",
             data_schema=get_schema(self._config_entry.data),
