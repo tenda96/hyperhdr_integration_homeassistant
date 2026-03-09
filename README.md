@@ -1,3 +1,6 @@
+![Views](https://img.shields.io/endpoint?url=https%3A%2F%2Fhits.dwyl.com%2Ftenda96%2Fhyperhdr_integration_homeassistant.json%3Fcolor%3Dblue&style=for-the-badge)
+![Stars](https://img.shields.io/github/stars/tenda96/hyperhdr_integration_homeassistant?style=for-the-badge&color=yellow)
+![Forks](https://img.shields.io/github/forks/tenda96/hyperhdr_integration_homeassistant?style=for-the-badge&color=lightgrey)
 # HyperHDR Integration for Home Assistant
 
 [![version](https://img.shields.io/github/manifest-json/v/tenda96/hyperhdr_integration_homeassistant?filename=hyperhdr_integration%2Fmanifest.json)](https://github.com/tenda96/hyperhdr_integration_homeassistant)
