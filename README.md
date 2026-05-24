@@ -1,87 +1,211 @@
 ![Views](https://img.shields.io/endpoint?url=https%3A%2F%2Fhits.dwyl.com%2Ftenda96%2Fhyperhdr_integration_homeassistant.json%3Fcolor%3Dblue&style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/tenda96/hyperhdr_integration_homeassistant?style=for-the-badge&color=yellow)
 ![Forks](https://img.shields.io/github/forks/tenda96/hyperhdr_integration_homeassistant?style=for-the-badge&color=lightgrey)
+
 # HyperHDR Integration for Home Assistant
 
 [![version](https://img.shields.io/github/manifest-json/v/tenda96/hyperhdr_integration_homeassistant?filename=hyperhdr_integration%2Fmanifest.json)](https://github.com/tenda96/hyperhdr_integration_homeassistant)
 
-A robust, native Home Assistant integration for **HyperHDR** (the open-source ambient lighting software). 
+A robust, native Home Assistant integration for **HyperHDR**.
 
-Unlike other integrations that act as simple switches, this component creates a fully featured **Light Entity** that manages **Priorities** intelligently. It allows you to seamlessly switch between your TV Input (USB Grabber) and Home Assistant colors/effects without conflicts, while providing **detailed entity attributes** (server version, active priority, ports) for full monitoring.
+Unlike simple switch-based integrations, this component creates a fully featured **Light Entity** for HyperHDR, with support for static colors, effects, brightness control, API authentication and configurable priority management.
+
+It is especially useful for setups where HyperHDR normally follows a TV/HDMI/USB grabber signal, but Home Assistant can temporarily take control to show colors or effects.
 
 <img src="hyperhdr_integration/logo.png" width="150" alt="HyperHDR Logo">
 
 ## ✨ Features
 
-* **Priority Management (The "Smart" Part):**
-    * **Light OFF:** HyperHDR runs in *Video Mode* (USB Grabber has priority). The LEDs follow your TV screen.
-    * **Light ON:** Home Assistant takes control (Priority 50). The LEDs display the color or effect selected in HA.
-    * **Automatic Fallback:** Turning off the light in HA immediately clears the priority, instantly returning control to the USB Grabber.
-* **Full RGB Support:** Includes brightness and color control via the standard HA UI.
-* **Effect Support:** Automatically fetches the list of effects from your HyperHDR instance.
-* **Rich Entity Attributes:** Exposes useful info like Server Version, Active Priority ID, and Connection Status directly in the entity.
-* **Config Flow:** Setup entirely via the UI (no YAML required).
-* **Authentication:** Supports HyperHDR API Tokens for secure connections.
+* **Full Light Entity Support**
+    * Control HyperHDR as a native Home Assistant light.
+    * Supports ON/OFF, RGB color, brightness and effects.
+
+* **Static Color & Effect Modes**
+    * Use Home Assistant to show a fixed RGB color.
+    * Select and run HyperHDR effects directly from the HA UI.
+    * Effects are fetched automatically from the HyperHDR instance.
+
+* **Shared Brightness**
+    * Brightness is now consistent between static colors and effects.
+    * The integration uses HyperHDR `adjustment.brightness`, which works properly with HyperHDR + WLED setups.
+    * Switching from color to effect, or from effect to color, keeps the same brightness level.
+
+* **Configurable Priority**
+    * A dedicated priority slider lets you choose which HyperHDR priority Home Assistant should use.
+    * Lower priority numbers win in HyperHDR.
+    * Use a low value, such as `50`, if you want Home Assistant to override the video signal.
+    * Use a higher value, such as `250` or `255`, if you want the video grabber/TV signal to win when active.
+
+* **Automatic Fallback to Video Mode**
+    * Turning off the Home Assistant light clears the HA priority.
+    * HyperHDR can immediately return to the active video source/grabber.
+
+* **Effect Reselect Fix**
+    * Switching `effect → static color → same effect again` now works correctly.
+    * Home Assistant no longer gets stuck thinking the previous effect is still active.
+
+* **Rich Entity Attributes**
+    * Exposes useful information such as host, port, server version, active priority, configured priority and connection status.
+
+* **Config Flow**
+    * Setup entirely via the Home Assistant UI.
+    * No YAML required.
+
+* **Authentication**
+    * Supports HyperHDR API tokens.
 
 ## ⚙️ Installation
 
-1.  Download the latest release or clone this repository.
-2.  Copy the `hyperhdr_integration` folder into your Home Assistant's `config/custom_components/` directory.
-3.  Restart Home Assistant.
+1. Download the latest release or clone this repository.
+2. Copy the `hyperhdr_integration` folder into your Home Assistant `config/custom_components/` directory.
+3. Restart Home Assistant.
+
+Final path:
+
+```text
+config/custom_components/hyperhdr_integration/
+```
 
 ## 🚀 Configuration
 
-1.  Go to **Settings** > **Devices & Services**.
-2.  Click **Add Integration** and search for **HyperHDR**.
-3.  Enter your details:
-    * **Host:** IP address of your HyperHDR instance (e.g., `192.168.1.x`).
-    * **Port:** The JSON-RPC port (Default is `8090` or `12000` depending on your Docker setup. Do **not** use the flatbuffer port).
-    * **Token:** (Optional) API Token if you have authentication enabled in HyperHDR.
-    * **Name:** Give your device a name (e.g., "Ambilight").
+1. Go to **Settings** > **Devices & Services**.
+2. Click **Add Integration** and search for **HyperHDR**.
+3. Enter your details:
+    * **Host:** IP address or hostname of your HyperHDR instance.
+    * **Port:** HyperHDR JSON-RPC HTTP port.
+    * **Token:** API token if authentication is enabled.
+    * **Name:** Friendly name for the device.
 
-### How to get an API Token
-If you have "API Authentication" enabled in HyperHDR:
-1.  Open HyperHDR WebUI.
-2.  Go to **Settings** > **Network Services**.
-3.  Under **API Authentication**, create a new token (e.g., named "HomeAssistant").
-4.  Copy the token immediately and paste it into the integration configuration.
+### Docker Port Note
+
+If HyperHDR runs in Docker, use the published host port.
+
+Example:
+
+```text
+0.0.0.0:12000->8090/tcp
+```
+
+In this case, use:
+
+```text
+Port: 12000
+```
+
+not `8090`, unless Home Assistant is in the same Docker network and can reach the container directly.
+
+### How to Get an API Token
+
+If API authentication is enabled in HyperHDR:
+
+1. Open the HyperHDR Web UI.
+2. Go to **Settings** > **Network Services**.
+3. Create a new API token.
+4. Copy it and paste it into the integration configuration.
 
 ## 💡 Usage
 
-This integration creates a `light` entity (e.g., `light.ambilight`).
+This integration creates:
 
-| State | HyperHDR Behavior | Priority Used |
-| :--- | :--- | :--- |
-| **OFF** | **Video Mode:** LEDs act as Ambilight (controlled by USB Grabber/Platform Capture). | Grabber (Default: 240) |
-| **ON (Color)** | **Static Color:** LEDs show the specific color chosen in HA. | Home Assistant (50) |
-| **ON (Effect)** | **Effect Mode:** LEDs play the selected effect (e.g., Rainbow, Knight Rider). | Home Assistant (50) |
+* a `light` entity, for color/effect/brightness control;
+* a `number` entity, for HyperHDR priority control.
 
-### Brightness & WLED Warning
-If you experience flickering or the light dimming unexpectedly when re-enabling it, check your **WLED** settings. Ensure that the **Maximum Current** limiter in WLED (LED Preferences) is disabled or set high enough. HyperHDR respects the physical limits of WLED, and double-dimming (HA dimming + WLED limiter) can cause issues.
+Example:
+
+```text
+light.ambilight
+number.ambilight_priority
+```
+
+| State | HyperHDR Behavior |
+| :--- | :--- |
+| **OFF** | HA priority is cleared and HyperHDR returns to video/grabber mode. |
+| **ON (Color)** | LEDs show the selected static RGB color. |
+| **ON (Effect)** | LEDs play the selected HyperHDR effect. |
 
 ## 🔧 Troubleshooting
 
-**Entity is Unavailable:**
-Check the logs in Home Assistant. If you see "Token non valido" or "HyperHDR Auth failed", verify your API Token.
+**Entity is unavailable:**
+Check that HyperHDR is running, the host/port are correct, and the API token is valid.
 
-**Icons/Logo not showing:**
-Clear your browser cache (CTRL+F5) or restart the Home Assistant app.
+**API says `No Authorization`:**
+HyperHDR authentication is enabled. Create or update the API token in the integration configuration.
+
+**Video does not win over Home Assistant:**
+Check the priority values. If the video grabber uses priority `240`, set Home Assistant priority higher, such as `250` or `255`.
+
+**Effect brightness does not change:**
+Make sure you are using the latest version. The integration now uses `adjustment.brightness`, not `luminanceGain`.
+
+**WLED brightness/current limits:**
+If you use WLED, check the WLED maximum current limiter and brightness settings. Double-dimming between WLED and HyperHDR can cause unexpected behavior.
+
+## 🧩 About `hacs.json`
+
+The `hacs.json` file is used by HACS to display and install the repository correctly.
+
+Example:
+
+```json
+{
+  "name": "HyperHDR Integration",
+  "render_readme": true
+}
+```
+
+* `name`: name shown in HACS.
+* `render_readme`: tells HACS to render this README in the integration page.
+
+This file does not affect the runtime behavior of the Home Assistant integration.
 
 ## 📝 Changelog
 
-* **v2.0.0:** * **Ultimate Anti-Flash Fix:** Rewrote the rendering logic using a pipeline-flush technique. Transitions between Solid Colors and Effects are now 100% smooth, eliminating the blinding 100% brightness flashes.
-  * **Unified Brightness:** The Home Assistant brightness slider is now perfectly synced with HyperHDR's global `luminanceGain` across all modes (Grabber, Solid Color, and Effects).
-  * **Code Refactoring:** Cleaned up logic and translated all internal code comments to English.
-* **v1.0.1:** * Addressed an issue where changing brightness would kill the active effect.
-  * Fixed a syntax error that prevented the integration from loading for new installations.
-* **v1.0.0:** * Initial release. Transformed the basic switch integration into a fully-featured Light Entity with Priority Management and Effect fetching.
+### v2.1.7
+
+* Fixed effect reselect behavior.
+* Selecting the same effect again after switching to a static color now works correctly.
+* Prevented stale effect state from keeping Home Assistant stuck on the previous effect.
+
+### v2.1.6
+
+* Reworked brightness handling.
+* Static colors and effects now share the same brightness.
+* Replaced `luminanceGain` dimming with HyperHDR `adjustment.brightness`.
+* Fixed brightness changes on active effects.
+* Improved behavior for HyperHDR + WLED setups.
+* Removed unnecessary effect restarts for brightness changes.
+
+### v2.1.0
+
+* Added shared coordinator.
+* Added configurable priority slider.
+* Improved light/effect state handling.
+* Added priority attributes and better connection state reporting.
+
+### v2.0.0
+
+* Improved solid color and effect switching.
+* Added better brightness handling.
+* Refactored the integration into a more complete Home Assistant light platform.
+
+### v1.0.1
+
+* Fixed issues where changing brightness could interrupt the active effect.
+* Fixed loading issues for new installations.
+
+### v1.0.0
+
+* Initial release.
+* Added basic HyperHDR light control with priority management and effect support.
 
 ## ❤️ Credits & Disclaimer
 
 This is a **personal project** created because I couldn't find an existing integration that offered full Light control with proper Priority Management.
 
 I am **not affiliated** with the official HyperHDR project in any way.
-A huge thank you to the **HyperHDR team** for their incredible work on the software itself—it's an amazing piece of engineering that makes this integration possible!
+
+A huge thank you to the **HyperHDR team** for their incredible work on the software itself.
 
 ## 📜 License
+
 MIT License
