@@ -1,11 +1,13 @@
-"""Constant for HyperHDR Simple home assistant integration."""
+"""Constants for the HyperHDR Home Assistant integration."""
 
 DOMAIN = "hyperhdr_integration"
-DEFAULT_PORT = 12000
+DEFAULT_PORT = 8090
 DEFAULT_NAME = "HyperHDR"
+DEFAULT_PRIORITY = 50
 
-# configuration values
 CONF_HOST = "host"
 CONF_PORT = "port"
 CONF_TOKEN = "token"
-CONF_NAME = "name"  
+CONF_NAME = "name"
+
+UPDATE_INTERVAL = 5
