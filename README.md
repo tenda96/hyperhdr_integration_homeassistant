@@ -4,7 +4,7 @@
 
 # HyperHDR Integration for Home Assistant
 
-[![version](https://img.shields.io/github/manifest-json/v/tenda96/hyperhdr_integration_homeassistant?filename=hyperhdr_integration%2Fmanifest.json)](https://github.com/tenda96/hyperhdr_integration_homeassistant)
+[![version](https://img.shields.io/github/manifest-json/v/tenda96/hyperhdr_integration_homeassistant?filename=custom_components%2Fhyperhdr_integration%2Fmanifest.json)](https://github.com/tenda96/hyperhdr_integration_homeassistant)
 
 A robust, native Home Assistant integration for **HyperHDR**.
 
@@ -12,7 +12,7 @@ Unlike simple switch-based integrations, this component creates a fully featured
 
 It is especially useful for setups where HyperHDR normally follows a TV/HDMI/USB grabber signal, but Home Assistant can temporarily take control to show colors or effects.
 
-<img src="hyperhdr_integration/logo.png" width="150" alt="HyperHDR Logo">
+<img src="custom_components/hyperhdr_integration/logo.png" width="150" alt="HyperHDR Logo">
 
 ## ✨ Features
 
