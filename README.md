@@ -5,7 +5,7 @@
 
 # HyperHDR Integration for Home Assistant
 
-[![version](https://img.shields.io/github/manifest-json/v/tenda96/hyperhdr_integration_homeassistant?filename=custom_components%2Fhyperhdr_integration%2Fmanifest.json)](https://github.com/tenda96/hyperhdr_integration_homeassistant)
+[![version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftenda96%2Fhyperhdr_integration_homeassistant%2Fmain%2Fcustom_components%2Fhyperhdr_integration%2Fmanifest.json&query=%24.version&label=version&style=for-the-badge&color=blue)](https://github.com/tenda96/hyperhdr_integration_homeassistant)
 
 A robust, native Home Assistant integration for **HyperHDR**.
 
