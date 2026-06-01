@@ -13,7 +13,7 @@ Unlike simple switch-based integrations, this component creates a fully featured
 
 It is especially useful for setups where HyperHDR normally follows a TV/HDMI/USB grabber signal, but Home Assistant can temporarily take control to show colors or effects.
 
-<img src="custom_components/hyperhdr_integration/brand/logo.png" width="150" alt="HyperHDR Logo">
+<img src="https://raw.githubusercontent.com/tenda96/hyperhdr_integration_homeassistant/main/custom_components/hyperhdr_integration/brand/logo.png" width="150" alt="HyperHDR Logo">
 
 ## ✨ Features
 
@@ -160,6 +160,13 @@ Example:
 This file does not affect the runtime behavior of the Home Assistant integration.
 
 ## 📝 Changelog
+
+### v2.1.8
+
+* Fixed priority migration when changing the Home Assistant priority slider.
+* The integration now recreates the current color/effect on the new priority and clears the old one.
+* Added cleanup for both configured and previously used priorities when turning off the light.
+* Added extra attributes for priority debugging.
 
 ### v2.1.7
 
