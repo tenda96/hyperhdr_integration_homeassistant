@@ -13,7 +13,7 @@ Unlike simple switch-based integrations, this component creates a fully featured
 
 It is especially useful for setups where HyperHDR normally follows a TV/HDMI/USB grabber signal, but Home Assistant can temporarily take control to show colors or effects.
 
-<img src="custom_components/hyperhdr_integration/logo.png" width="150" alt="HyperHDR Logo">
+<img src="custom_components/hyperhdr_integration/brand/logo.png" width="150" alt="HyperHDR Logo">
 
 ## ✨ Features
 
