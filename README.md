@@ -28,7 +28,8 @@ It is especially useful for setups where HyperHDR normally follows a TV/HDMI/USB
 
 * **Shared Brightness**
     * Brightness is now consistent between static colors and effects.
-    * The integration uses `adjustment.scaleOutput` on HyperHDR 22 and `adjustment.brightness` on older versions.
+    * On HyperHDR 22, effects use `adjustment.scaleOutput` and static colors use scaled RGB values.
+    * Older HyperHDR versions continue to use `adjustment.brightness`.
     * Switching from color to effect, or from effect to color, keeps the same brightness level.
 
 * **Configurable Priority**
@@ -138,6 +139,9 @@ Check the priority values. If the video grabber uses priority `240`, set Home As
 **Effect brightness does not change:**
 Make sure you are using the latest version. HyperHDR 22 requires `adjustment.scaleOutput`; older versions use `adjustment.brightness`.
 
+**Static color brightness does not change:**
+Update to v2.1.10 or later. HyperHDR 22 needs the RGB color sent again at the selected brightness.
+
 **WLED brightness/current limits:**
 If you use WLED, check the WLED maximum current limiter and brightness settings. Double-dimming between WLED and HyperHDR can cause unexpected behavior.
 
@@ -169,6 +173,11 @@ ZIP includes the `brand/` icon and logo. HACS uses the release tag to offer the
 new version. The changelog section becomes the release notes.
 
 ## 📝 Changelog
+
+### v2.1.10
+
+  * Fixed brightness changes for static colors on HyperHDR 22 by scaling and resending RGB values.
+  * Kept effect brightness changes on `adjustment.scaleOutput` without restarting effects.
 
 ### v2.1.9
 

@@ -40,9 +40,10 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
 
     Brightness handling note:
     -------------------------
-    HyperHDR 22 uses ``adjustment.scaleOutput`` for shared output brightness.
-    Older releases use ``adjustment.brightness`` instead. Both static colors
-    and effects use the field exposed by the connected server.
+    HyperHDR 22 uses ``adjustment.scaleOutput`` for effect brightness. Static
+    colors on that release need their RGB values scaled as well: changing the
+    adjustment alone does not visibly dim a static color. Older releases use
+    ``adjustment.brightness`` for both modes.
     """
 
     def __init__(self, coordinator: HyperHDRCoordinator, name: str, entry_id: str) -> None:
@@ -108,11 +109,7 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
 
     @property
     def rgb_color(self) -> tuple[int, int, int]:
-        """Return the unscaled RGB color.
-
-        Static color brightness is handled by HyperHDR's global adjustment
-        brightness, not by scaling RGB values manually.
-        """
+        """Return the selected RGB color, before any brightness scaling."""
         return self._rgb_color
 
     @property
@@ -328,7 +325,22 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
         # poll. This keeps HA's effect selector cleared and makes re-selecting
         # the same effect work correctly.
         if self._requested_mode == "color":
-            await self._apply_shared_brightness(priority)
+            await self._activate_color(priority)
+            return
+
+        visible_priority = self.coordinator.visible_priority()
+        if (
+            visible_priority
+            and visible_priority.get("priority") == priority
+            and visible_priority.get("componentId") == "COLOR"
+        ):
+            value = visible_priority.get("value")
+            rgb = value.get("RGB") if isinstance(value, dict) else None
+            if isinstance(rgb, list) and len(rgb) == 3:
+                self._rgb_color = tuple(int(channel) for channel in rgb)
+            self._requested_mode = "color"
+            self._effect = None
+            await self._activate_color(priority)
             return
 
         # If HA already controls HyperHDR, changing only the adjustment brightness
@@ -383,10 +395,17 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
         )
 
     async def _activate_color(self, priority: int, *, refresh: bool = True) -> None:
-        """Show a static RGB color using shared HyperHDR brightness adjustment."""
+        """Show a static color and apply the server's brightness behavior."""
         brightness_adjustment = self._brightness_adjustment()
+        adjustment = self._current_adjustment()
+        if adjustment is not None and "scaleOutput" in adjustment:
+            ratio = self._brightness / 255.0
+            color = [max(0, min(255, round(channel * ratio))) for channel in self._rgb_color]
+            self._last_command_path = "activate_color_scaled_rgb"
+        else:
+            color = [int(channel) for channel in self._rgb_color]
+            self._last_command_path = "activate_color_brightness_unscaled_rgb"
         self._last_sent_priority = int(priority)
-        self._last_command_path = "activate_color_brightness_unscaled_rgb"
 
         await self.coordinator.async_send_commands(
             [
@@ -400,7 +419,7 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
                 },
                 {
                     "command": "color",
-                    "color": [int(channel) for channel in self._rgb_color],
+                    "color": color,
                     "priority": priority,
                     "origin": "Home Assistant",
                 },
