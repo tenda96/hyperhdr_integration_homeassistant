@@ -28,7 +28,7 @@ It is especially useful for setups where HyperHDR normally follows a TV/HDMI/USB
 
 * **Shared Brightness**
     * Brightness is now consistent between static colors and effects.
-    * The integration uses HyperHDR `adjustment.brightness`, which works properly with HyperHDR + WLED setups.
+    * The integration uses `adjustment.scaleOutput` on HyperHDR 22 and `adjustment.brightness` on older versions.
     * Switching from color to effect, or from effect to color, keeps the same brightness level.
 
 * **Configurable Priority**
@@ -136,7 +136,7 @@ HyperHDR authentication is enabled. Create or update the API token in the integr
 Check the priority values. If the video grabber uses priority `240`, set Home Assistant priority higher, such as `250` or `255`.
 
 **Effect brightness does not change:**
-Make sure you are using the latest version. The integration now uses `adjustment.brightness`, not `luminanceGain`.
+Make sure you are using the latest version. HyperHDR 22 requires `adjustment.scaleOutput`; older versions use `adjustment.brightness`.
 
 **WLED brightness/current limits:**
 If you use WLED, check the WLED maximum current limiter and brightness settings. Double-dimming between WLED and HyperHDR can cause unexpected behavior.
@@ -160,6 +160,11 @@ Example:
 This file does not affect the runtime behavior of the Home Assistant integration.
 
 ## 📝 Changelog
+
+### v2.1.9
+
+  * Fixed brightness control on HyperHDR 22 by using `adjustment.scaleOutput`.
+  * Kept brightness control compatible with older HyperHDR versions.
 
 ### v2.1.8
 

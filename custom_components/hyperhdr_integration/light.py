@@ -40,12 +40,9 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
 
     Brightness handling note:
     -------------------------
-    HyperHDR exposes both ``luminanceGain`` and ``brightness`` inside the
-    adjustment object. On WLED-backed setups, effects react to
-    ``adjustment.brightness`` while ``luminanceGain`` may update in serverinfo
-    without changing the LEDs visually. For that reason this entity uses
-    ``adjustment.brightness`` as the single shared brightness control for both
-    static colors and effects.
+    HyperHDR 22 uses ``adjustment.scaleOutput`` for shared output brightness.
+    Older releases use ``adjustment.brightness`` instead. Both static colors
+    and effects use the field exposed by the connected server.
     """
 
     def __init__(self, coordinator: HyperHDRCoordinator, name: str, entry_id: str) -> None:
@@ -68,6 +65,7 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
         self._requested_mode: str | None = None
         self._last_hyperhdr_brightness: int | None = None
         self._last_hyperhdr_luminance_gain: float | None = None
+        self._last_hyperhdr_scale_output: float | None = None
         self._last_command_path: str | None = None
         self._last_sent_priority = int(self.coordinator.priority)
         self._last_priority_migration: str | None = None
@@ -99,6 +97,10 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the Home Assistant brightness value between 1 and 255."""
+        scale_output = self._current_hyperhdr_scale_output()
+        if scale_output is not None:
+            self._brightness = max(1, min(255, round(scale_output * 255)))
+            return self._brightness
         hyperhdr_brightness = self._current_hyperhdr_brightness()
         if hyperhdr_brightness is not None:
             self._brightness = self._ha_brightness_from_hyperhdr_brightness(hyperhdr_brightness)
@@ -183,6 +185,7 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
 
             self._last_hyperhdr_brightness = self._current_hyperhdr_brightness()
             self._last_hyperhdr_luminance_gain = self._current_hyperhdr_luminance_gain()
+            self._last_hyperhdr_scale_output = self._current_hyperhdr_scale_output()
 
         return {
             "hyperhdr_host": self.coordinator.host,
@@ -197,6 +200,7 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
             "ha_brightness": self._brightness,
             "hyperhdr_brightness": self._last_hyperhdr_brightness,
             "hyperhdr_luminance_gain": self._last_hyperhdr_luminance_gain,
+            "hyperhdr_scale_output": self._last_hyperhdr_scale_output,
             "last_command_path": self._last_command_path,
             "last_sent_priority": self._last_sent_priority,
             "last_priority_migration": self._last_priority_migration,
@@ -354,8 +358,7 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
         refresh: bool = True,
     ) -> None:
         """Start an effect using the shared HyperHDR brightness adjustment."""
-        hyperhdr_brightness = self._hyperhdr_brightness_from_ha_brightness(self._brightness)
-        self._last_hyperhdr_brightness = hyperhdr_brightness
+        brightness_adjustment = self._brightness_adjustment()
         self._last_sent_priority = int(priority)
         self._last_command_path = "activate_effect_brightness_no_clear"
 
@@ -367,7 +370,7 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
                 },
                 {
                     "command": "adjustment",
-                    "adjustment": {"brightness": hyperhdr_brightness},
+                    "adjustment": brightness_adjustment,
                 },
                 {
                     "command": "effect",
@@ -381,8 +384,7 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
 
     async def _activate_color(self, priority: int, *, refresh: bool = True) -> None:
         """Show a static RGB color using shared HyperHDR brightness adjustment."""
-        hyperhdr_brightness = self._hyperhdr_brightness_from_ha_brightness(self._brightness)
-        self._last_hyperhdr_brightness = hyperhdr_brightness
+        brightness_adjustment = self._brightness_adjustment()
         self._last_sent_priority = int(priority)
         self._last_command_path = "activate_color_brightness_unscaled_rgb"
 
@@ -394,7 +396,7 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
                 },
                 {
                     "command": "adjustment",
-                    "adjustment": {"brightness": hyperhdr_brightness},
+                    "adjustment": brightness_adjustment,
                 },
                 {
                     "command": "color",
@@ -408,8 +410,7 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
 
     async def _apply_shared_brightness(self, priority: int, *, refresh: bool = True) -> None:
         """Apply only shared brightness, keeping the current HyperHDR source."""
-        hyperhdr_brightness = self._hyperhdr_brightness_from_ha_brightness(self._brightness)
-        self._last_hyperhdr_brightness = hyperhdr_brightness
+        brightness_adjustment = self._brightness_adjustment()
         self._last_command_path = "apply_shared_brightness_only"
 
         await self.coordinator.async_send_commands(
@@ -420,7 +421,7 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
                 },
                 {
                     "command": "adjustment",
-                    "adjustment": {"brightness": hyperhdr_brightness},
+                    "adjustment": brightness_adjustment,
                 },
             ],
             refresh=refresh,
@@ -439,28 +440,61 @@ class HyperHDRLight(CoordinatorEntity, LightEntity):
         return None
 
     def _current_hyperhdr_brightness(self) -> int | None:
-        """Return HyperHDR adjustment brightness, 0..100, if available."""
-        if not self.coordinator.data:
-            return None
-        adjustments = self.coordinator.data.get("adjustment", [])
-        if not adjustments or not isinstance(adjustments, list):
+        """Return the server's shared brightness as a percentage, if available."""
+        adjustment = self._current_adjustment()
+        if adjustment is None:
             return None
         try:
-            return max(0, min(100, int(float(adjustments[0].get("brightness", 100)))))
+            if "scaleOutput" in adjustment:
+                return max(0, min(100, round(float(adjustment["scaleOutput"]) * 100)))
+            if "brightness" in adjustment:
+                return max(0, min(100, round(float(adjustment["brightness"]))))
+        except (TypeError, ValueError):
+            pass
+        return None
+
+    def _current_hyperhdr_scale_output(self) -> float | None:
+        """Return the raw HyperHDR 22 output scale for diagnostics."""
+        adjustment = self._current_adjustment()
+        if adjustment is None or "scaleOutput" not in adjustment:
+            return None
+        try:
+            return float(adjustment["scaleOutput"])
         except (TypeError, ValueError):
             return None
 
-    def _current_hyperhdr_luminance_gain(self) -> float | None:
-        """Return HyperHDR luminanceGain for debugging only."""
+    def _current_adjustment(self) -> dict[str, Any] | None:
+        """Return the first adjustment reported by serverinfo."""
         if not self.coordinator.data:
             return None
-        adjustments = self.coordinator.data.get("adjustment", [])
-        if not adjustments or not isinstance(adjustments, list):
+        adjustments = self.coordinator.data.get("adjustment")
+        if isinstance(adjustments, list) and adjustments and isinstance(adjustments[0], dict):
+            return adjustments[0]
+        return None
+
+    def _brightness_adjustment(self) -> dict[str, float | int]:
+        """Build the brightness command for the server's adjustment format."""
+        percentage = self._hyperhdr_brightness_from_ha_brightness(self._brightness)
+        self._last_hyperhdr_brightness = percentage
+        adjustment = self._current_adjustment()
+        if adjustment is not None and "scaleOutput" in adjustment:
+            scale_output = self._brightness / 255.0
+            self._last_hyperhdr_scale_output = scale_output
+            return {"scaleOutput": scale_output}
+        self._last_hyperhdr_scale_output = None
+        return {"brightness": percentage}
+
+    def _current_hyperhdr_luminance_gain(self) -> float | None:
+        """Return HyperHDR luminanceGain for debugging only."""
+        adjustment = self._current_adjustment()
+        if adjustment is None:
             return None
         try:
-            return float(adjustments[0].get("luminanceGain", 1.0))
+            if "luminanceGain" in adjustment:
+                return float(adjustment["luminanceGain"])
         except (TypeError, ValueError):
-            return None
+            pass
+        return None
 
     @staticmethod
     def _hyperhdr_brightness_from_ha_brightness(value: int) -> int:
