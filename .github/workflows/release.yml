@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source and tags
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -69,6 +69,22 @@ jobs:
           mkdir -p dist
           (cd custom_components && zip -q -r "../dist/hyperhdr_integration-$VERSION.zip" hyperhdr_integration)
           unzip -t "dist/hyperhdr_integration-$VERSION.zip" >/dev/null
+          python3 - "$VERSION" <<'PY' > dist/release-notes.md
+          import re
+          import sys
+          import textwrap
+          from pathlib import Path
+
+          version = sys.argv[1]
+          readme = Path("README.md").read_text(encoding="utf-8")
+          section = re.search(
+              rf"(?ms)^### v{re.escape(version)}\s*\n(.*?)(?=^### |^## |\Z)", readme
+          )
+          if section is None:
+              raise SystemExit(f"Missing README changelog section for v{version}")
+          print(textwrap.dedent(section.group(1)).strip())
+          PY
+          test -s dist/release-notes.md
 
       - name: Publish GitHub release
         if: steps.existing.outputs.exists == 'false'
@@ -81,4 +97,4 @@ jobs:
           gh release create "$VERSION" "dist/hyperhdr_integration-$VERSION.zip" \
             --target "$GITHUB_SHA" \
             --title "v$VERSION" \
-            --generate-notes
+            --notes-file dist/release-notes.md

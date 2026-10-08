@@ -161,11 +161,12 @@ This file does not affect the runtime behavior of the Home Assistant integration
 
 ## 📦 Releases
 
-Update the version in `custom_components/hyperhdr_integration/manifest.json` and
-push to `main`. The release workflow creates a GitHub release with a matching
+Update the version in `custom_components/hyperhdr_integration/manifest.json`,
+add a matching changelog section below, and push to `main`. The release workflow
+creates a GitHub release with a matching
 numeric tag (for example, `2.1.9`) and attaches a ZIP of the integration. The
 ZIP includes the `brand/` icon and logo. HACS uses the release tag to offer the
-new version.
+new version. The changelog section becomes the release notes.
 
 ## 📝 Changelog
 
