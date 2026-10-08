@@ -159,12 +159,21 @@ Example:
 
 This file does not affect the runtime behavior of the Home Assistant integration.
 
+## 📦 Releases
+
+Update the version in `custom_components/hyperhdr_integration/manifest.json` and
+push to `main`. The release workflow creates a GitHub release with a matching
+numeric tag (for example, `2.1.9`) and attaches a ZIP of the integration. The
+ZIP includes the `brand/` icon and logo. HACS uses the release tag to offer the
+new version.
+
 ## 📝 Changelog
 
 ### v2.1.9
 
   * Fixed brightness control on HyperHDR 22 by using `adjustment.scaleOutput`.
   * Kept brightness control compatible with older HyperHDR versions.
+  * Included the integration's icon and logo in the tagged release.
 
 ### v2.1.8
 
